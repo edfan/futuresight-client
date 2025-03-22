@@ -185,6 +185,8 @@ process.stdout.write("and news... ");
 let stdout = '';
 let newsid = 0;
 let news = '[failed to retrieve news]';
+
+/*
 try {
 	stdout = child_process.execSync('php ' + path.resolve(thisDir, 'news-embed.php'));
 } catch (e) {
@@ -195,6 +197,7 @@ try {
 } catch (e) {
 	console.log("git hook failed to retrieve news (parsing JSON failed):\n" + e.stack);
 }
+*/
 
 indexContents = indexContents.replace(/<!-- newsid -->/g, newsid);
 indexContents = indexContents.replace(/<!-- news -->/g, news);
