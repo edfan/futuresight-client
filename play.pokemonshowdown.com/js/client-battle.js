@@ -14,7 +14,7 @@
 
 			this.isSideRoom = Dex.prefs('rightpanelbattles');
 
-			this.$el.addClass('ps-room-opaque').html('<div class="battle">Battle is here</div><div class="foehint"></div><div class="battle-log" aria-label="Battle Log" role="complementary"></div><div class="battle-log-add">Connecting...</div><ul class="battle-userlist userlist userlist-minimized"></ul><div class="battle-controls" id="battle-controls-p1" role="complementary" aria-label="Battle Controls"></div><div class="battle-controls" id="battle-controls-p2" role="complementary" aria-label="Battle Controls"></div><button class="battle-chat-toggle button" name="showChat"><i class="fa fa-caret-left"></i> Chat</button>');
+			this.$el.addClass('ps-room-opaque').html('<div class="battle">Battle is here</div><div class="foehint"></div><div class="battle-log" aria-label="Battle Log" role="complementary"></div><div class="battle-log-add">Connecting...</div><ul class="battle-userlist userlist userlist-minimized"></ul><div class="battle-controls" id="battle-controls-p1" role="complementary" aria-label="Battle Controls"></div><hr><div class="battle-controls" id="battle-controls-p2" role="complementary" aria-label="Battle Controls"></div><button class="battle-chat-toggle button" name="showChat"><i class="fa fa-caret-left"></i> Chat</button>');
 
 			this.$battle = this.$el.find('.battle');
 			this.$controls = this.$el.find('.battle-controls');
@@ -38,6 +38,7 @@
 			this.choices = new Map();
 			this.allSideData = new Map();
 			this.controlsShown = new Map();
+			this.jumpingToTurn = false;
 
 			var self = this;
 			this.battle.subscribe(function () { self.updateControls("p1"); self.updateControls("p2"); });
@@ -97,12 +98,12 @@
 				this.$battle.css('transform', 'scale(' + scale + ')');
 				this.$foeHint.css('transform', 'scale(' + scale + ')');
 				this.$controls.css('top', 360 * scale + 10);
-				this.$el.find('#battle-controls-p2').css('top', (360 * scale + 10) * 2);
+				this.$el.find('#battle-controls-p2').css({'border-top': '3px solid #999999', 'padding-top': '14px', 'top': 560 * scale + 10});
 			} else {
 				this.$battle.css('transform', 'none');
 				this.$foeHint.css('transform', 'none');
 				this.$controls.css('top', 370);
-				this.$el.find('#battle-controls-p2').css('top', 370 * 2);
+				this.$el.find('#battle-controls-p2').css({'border-top': '3px solid #999999', 'padding-top': '14px', 'top': 570});
 			}
 			this.$el.toggleClass('small-layout', width < 830);
 			this.$el.toggleClass('tiny-layout', width < 640);
@@ -230,6 +231,15 @@
 					this.battle.stepQueue.push(logLine);
 				} else if (logLine.substr(0, 6) === '|chat|' || logLine.substr(0, 3) === '|c|' || logLine.substr(0, 4) === '|c:|' || logLine.substr(0, 9) === '|chatmsg|' || logLine.substr(0, 10) === '|inactive|') {
 					this.battle.instantAdd(logLine);
+				} else if (logLine.substr(0, 12) === '|jumptoturn|') {
+					this.jumpingToTurn = true;
+					this.battle.stepQueue.push(logLine);
+				} else if (logLine.substr(0, 6) === '|turn|') {
+					this.battle.stepQueue.push(logLine);
+					if (this.jumpingToTurn === true) {
+						this.battle.scene.animationOff();
+						this.jumpingToTurn = false;
+					}
 				} else {
 					this.battle.stepQueue.push(logLine);
 				}
@@ -398,7 +408,7 @@
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
 			var sideData = this.allSideData.get(side);
-			console.log(request, side);
+
 			if (request) {
 				// TODO: investigate when to do this
 				this.updateSide();
@@ -863,8 +873,7 @@
 				if (pokemon.fainted || i < this.battle.pokemonControlled || choice.switchFlags[i] || trapped) {
 					party += '<button class="disabled has-tooltip" name="chooseDisabled" value="' + BattleLog.escapeHTML(pokemon.name) + (pokemon.fainted ? ',fainted' : trapped ? ',trapped' : i < sameSide.active.length ? ',active' : '') + '" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + (pokemon.hp ? '<span class="' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') : '') + '</button> ';
 				} else {
-					party += '<button name="chooseSwitch" value="' + this.writeValue(i, side) + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '<span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';
-				}
+					party += '<button name="chooseSwitch" value="' + this.writeValue(i, side) + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '<span class="' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') + '</button> ';}
 			}
 			if (sameSide.ally) party += this.displayAllyParty();
 			return party;

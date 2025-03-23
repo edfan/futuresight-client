@@ -3750,6 +3750,10 @@ export class Battle {
 			}
 			break;
 		}
+		case 'jumptoturn': {
+			this.scene.log.jumpToTurn(parseInt(BattleLog.sanitizeHTML(args[1])));
+			break;
+		}
 		default: {
 			this.log(args, kwArgs, preempt);
 			break;

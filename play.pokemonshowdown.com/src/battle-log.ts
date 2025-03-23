@@ -13,6 +13,7 @@
  * @license MIT
  */
 
+import $ from 'jquery';
 import type { Battle } from './battle';
 import type { BattleScene } from './battle-animations';
 import { Dex, Teams, toID, toRoomid, toUserid, type ID } from './battle-dex';
@@ -101,6 +102,16 @@ export class BattleLog {
 			this.scene?.battle.seekTurn(this.scene.battle.turn - 100);
 		});
 		this.addNode(el);
+	}
+	jumpToTurn(turn: number) {
+		console.log(turn);
+		if (turn <= 1) {
+			turn = 1;
+		} else {
+			turn -= 1;
+		}
+		let turnId = `Turn ${turn}`;
+		$(`[id='${turnId}']`).nextAll().remove();
 	}
 	add(args: Args, kwArgs?: KWArgs, preempt?: boolean) {
 		if (kwArgs?.silent) return;
@@ -336,6 +347,7 @@ export class BattleLog {
 			} else {
 				turnMessage = `Turn ${args[1]}`;
 			}
+			h2elem.id = turnMessage;
 			h2elem.innerHTML = BattleLog.escapeHTML(turnMessage);
 			this.addSpacer();
 			this.addNode(h2elem);
