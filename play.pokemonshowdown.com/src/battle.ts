@@ -1023,6 +1023,7 @@ export class Battle {
 	viewpointSwitched = false;
 
 	stepQueue: string[];
+	stepQueueByTurn: Map<Number, string[]>;
 	/** See battle.instantAdd */
 	preemptStepQueue: string[] = [];
 	waitForAnimations: true | false | 'simult' = true;
@@ -1158,6 +1159,7 @@ export class Battle {
 		this.debug = !!options.debug;
 		if (typeof options.log === 'string') options.log = options.log.split('\n');
 		this.stepQueue = options.log || [];
+		this.stepQueueByTurn = new Map<Number, string[]>();
 		this.subscription = options.subscription || null;
 		this.autoresize = !!options.autoresize;
 
@@ -1376,6 +1378,8 @@ export class Battle {
 		if (this.turn && !this.usesUpkeep) this.updateTurnCounters(); // for compatibility with old replays
 		this.turn = turnNum;
 		this.started = true;
+
+		this.stepQueueByTurn.set(turnNum, [...this.stepQueue]);
 
 		if (this.seeking === null) this.turnsSinceMoved++;
 
@@ -3751,7 +3755,13 @@ export class Battle {
 			break;
 		}
 		case 'jumptoturn': {
-			this.scene.log.jumpToTurn(parseInt(BattleLog.sanitizeHTML(args[1])));
+			let turn = parseInt(BattleLog.sanitizeHTML(args[1]));
+			let stepQueueAtTurn = this.stepQueueByTurn.get(turn);
+			if (stepQueueAtTurn) {
+				this.scene.log.jumpToTurn(turn);
+				this.setQueue(stepQueueAtTurn);
+				this.seekTurn(turn, true);
+			}
 			break;
 		}
 		default: {

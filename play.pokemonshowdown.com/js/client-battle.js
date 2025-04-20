@@ -473,19 +473,26 @@
 				break;
 
 			case 'team':
+				/*
 				if (sameSide.pokemon && !sameSide.length) {
 					// too early, we can't determine `this.choice.count` yet
 					// TODO: send teamPreviewCount in the request object
 					this.controlsShown = new Map();
 					return;
 				}
+				*/
+				
+
+				switchables = sideData.pokemon;
+
 				if (!choice) {
-					this.choices.set(side, {
+					choice = {
 						choices: null,
 						teamPreview: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].slice(0, switchables.length),
 						done: 0,
 						count: 1
-					});
+					};
+					this.choices.set(side, choice);
 					if (this.battle.gameType === 'multi') {
 						choice.count = 1;
 					}
@@ -503,6 +510,12 @@
 					}
 					if (this.battle.teamPreviewCount) {
 						var requestCount = parseInt(this.battle.teamPreviewCount, 10);
+						if (requestCount > 0 && requestCount <= switchables.length) {
+							choice.count = requestCount;
+						}
+					}
+					if (request.maxChosenTeamSize) {
+						var requestCount = parseInt(request.maxChosenTeamSize, 10);
 						if (requestCount > 0 && requestCount <= switchables.length) {
 							choice.count = requestCount;
 						}
@@ -996,7 +1009,8 @@
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
 			var sideData = this.allSideData.get(side);
-			var switchables = request && request.side ? sideData.pokemon : [];
+			// var switchables = request && request.side ? sideData.pokemon : [];
+			var switchables = sideData.pokemon;
 			var maxIndex = Math.min(switchables.length, 24);
 
 			var requestTitle = "";
@@ -1014,7 +1028,7 @@
 				if (i < choice.done) {
 					switchMenu += '<button disabled class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '</button> ';
 				} else {
-					switchMenu += '<button name="chooseTeamPreview" value="' + writeValue(i, side) + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '</button> ';
+					switchMenu += '<button name="chooseTeamPreview" value="' + this.writeValue(i, side) + '" class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '</button> ';
 				}
 			}
 
@@ -1168,7 +1182,7 @@
 		 */
 		sendDecision: function (message, side) {
 			var request = this.requests.get(side);
-			if (!$.isArray(message)) return this.send('/' + message + '|' + request.rqid);
+			if (!$.isArray(message)) return this.send('/' + message + '|' + side + '|' + request.rqid);
 			var buf = '/choose ';
 			for (var i = 0; i < message.length; i++) {
 				if (message[i]) buf += message[i] + ',';
@@ -1638,6 +1652,9 @@
 		clearChoice: function (side) {
 			this.choices.delete(side);
 			this.updateControlsForPlayer(side);
+		},
+		jumpToTurn: function (turn) {
+			this.send('/jumpToTurn ' + turn);
 		},
 		leaveBattle: function () {
 			this.tooltips.hideTooltip();

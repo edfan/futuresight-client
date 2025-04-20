@@ -348,7 +348,7 @@ export class BattleLog {
 				turnMessage = `Turn ${args[1]}`;
 			}
 			h2elem.id = turnMessage;
-			h2elem.innerHTML = BattleLog.escapeHTML(turnMessage);
+			h2elem.innerHTML = BattleLog.escapeHTML(turnMessage) + `&nbsp;<button name="jumpToTurn" value="${args[1]}">Jump</button>`;
 			this.addSpacer();
 			this.addNode(h2elem);
 			break;
