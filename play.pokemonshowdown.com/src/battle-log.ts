@@ -105,8 +105,8 @@ export class BattleLog {
 	}
 	jumpToTurn(turn: number) {
 		console.log(turn);
-		if (turn <= 1) {
-			turn = 1;
+		if (turn < 1) {
+			turn = 0;
 		} else {
 			turn -= 1;
 		}

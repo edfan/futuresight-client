@@ -232,14 +232,9 @@
 				} else if (logLine.substr(0, 6) === '|chat|' || logLine.substr(0, 3) === '|c|' || logLine.substr(0, 4) === '|c:|' || logLine.substr(0, 9) === '|chatmsg|' || logLine.substr(0, 10) === '|inactive|') {
 					this.battle.instantAdd(logLine);
 				} else if (logLine.substr(0, 12) === '|jumptoturn|') {
-					this.jumpingToTurn = true;
 					this.battle.stepQueue.push(logLine);
 				} else if (logLine.substr(0, 6) === '|turn|') {
 					this.battle.stepQueue.push(logLine);
-					if (this.jumpingToTurn === true) {
-						this.battle.scene.animationOff();
-						this.jumpingToTurn = false;
-					}
 				} else {
 					this.battle.stepQueue.push(logLine);
 				}
@@ -671,7 +666,7 @@
 
 			var requestTitle = '';
 			if (type === 'move2' || type === 'movetarget') {
-				requestTitle += '<button name="clearChoice">Back</button> ';
+				requestTitle += '<button name="clearChoice" value="' + side + '">Back</button> ';
 			}
 
 			// Target selector
@@ -933,7 +928,7 @@
 
 			var requestTitle = '';
 			if (type === 'switch2' || type === 'switchposition') {
-				requestTitle += '<button name="clearChoice">Back</button> ';
+				requestTitle += '<button name="clearChoice" value="' + side + '">Back</button> ';
 			}
 
 			// Place selector
@@ -1015,7 +1010,7 @@
 
 			var requestTitle = "";
 			if (choice.done) {
-				requestTitle = '<button name="clearChoice">Back</button> ' + "What about the rest of your team?";
+				requestTitle = '<button name="clearChoice" value="' + side + '">Back</button> ' + "What about the rest of your team?";
 			} else {
 				requestTitle = "How will you start the battle?";
 			}
