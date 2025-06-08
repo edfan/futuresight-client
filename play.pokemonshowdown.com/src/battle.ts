@@ -1091,6 +1091,7 @@ export class Battle {
 	sides: Side[] = null!;
 	myPokemon: ServerPokemon[] | null = null;
 	myAllyPokemon: ServerPokemon[] | null = null;
+	allSideData: Map<string, any> = new Map();
 	lastMove = '';
 
 	gen = 8;
@@ -1175,6 +1176,21 @@ export class Battle {
 		if (this.autoresize) {
 			window.addEventListener('resize', this.onResize);
 			this.onResize();
+		}
+	}
+
+	sameSide(side: string) {
+		if (side === this.mySide.sideid) {
+			return this.nearSide;
+		} else {
+			return this.farSide;
+		}
+	}
+	oppSide(side: string) {
+		if (side === this.mySide.sideid) {
+			return this.farSide;
+		} else {
+			return this.nearSide;
 		}
 	}
 

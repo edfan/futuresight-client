@@ -339,17 +339,25 @@ export class BattleTooltips {
 			buf = this.showPokemonTooltip(pokemon, serverPokemon, true);
 			break;
 		}
-		case 'switchpokemon': { // switchpokemon|POKEMON
+		case 'activetargetpokemon': { // activetargetpokemon|ACTIVE|SIDEID
+			// mouse over active pokemon
+			// pokemon definitely exists, serverPokemon maybe
+			let activeIndex = parseInt(args[1], 10);
+			let sideID = args[2];
+			let pokemon = null;
+			let serverPokemon = this.battle.allSideData.get(sideID)!.pokemon[activeIndex];
+			buf = this.showPokemonTooltip(pokemon, serverPokemon, true);
+			break;
+		}
+		case 'switchpokemon': { // switchpokemon|POKEMON|SIDEID
 			// mouse over switchable pokemon
 			// serverPokemon definitely exists, sidePokemon maybe
 			// let side = this.battle.mySide;
 			let activeIndex = parseInt(args[1], 10);
+			let sideID = args[2];
+			let sideData = this.battle.allSideData.get(sideID);
 			let pokemon = null;
-			/* if (activeIndex < side.active.length && activeIndex < this.battle.pokemonControlled) {
-				pokemon = side.active[activeIndex];
-				if (pokemon && pokemon.side === side.ally) pokemon = null;
-			} */
-			let serverPokemon = this.battle.myPokemon![activeIndex];
+			let serverPokemon = sideData!.pokemon[activeIndex];
 			buf = this.showPokemonTooltip(pokemon, serverPokemon);
 			break;
 		}

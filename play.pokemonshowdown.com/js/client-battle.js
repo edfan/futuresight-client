@@ -36,7 +36,6 @@
 			this.requests = new Map();
 			this.controls = new Map();
 			this.choices = new Map();
-			this.allSideData = new Map();
 			this.controlsShown = new Map();
 			this.jumpingToTurn = false;
 
@@ -402,7 +401,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 
 			if (request) {
 				// TODO: investigate when to do this
@@ -613,7 +612,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			var switchables = request && request.side ? sideData.pokemon : [];
 
 			if (type !== 'movetarget') {
@@ -686,7 +685,7 @@
 
 				for (var i = farActive.length - 1; i >= 0; i--) {
 					var pokemon = farActive[i];
-					var tooltipArgs = 'activepokemon|1|' + i;
+					var tooltipArgs = 'activetargetpokemon|' + i + '|' + this.battle.oppSide(side).sideid;
 
 					var disabled = false;
 					if (moveTarget === 'adjacentAlly' || moveTarget === 'adjacentAllyOrSelf') {
@@ -705,7 +704,7 @@
 				}
 				for (var i = 0; i < nearActive.length; i++) {
 					var pokemon = nearActive[i];
-					var tooltipArgs = 'activepokemon|0|' + i;
+					var tooltipArgs = 'activetargetpokemon|' + i + '|' + side;
 
 					var disabled = false;
 					if (moveTarget === 'adjacentFoe') {
@@ -877,7 +876,7 @@
 			for (var i = 0; i < switchables.length; i++) {
 				var pokemon = switchables[i];
 				pokemon.name = pokemon.ident.substr(4);
-				var tooltipArgs = 'switchpokemon|' + i;
+				var tooltipArgs = 'switchpokemon|' + i + '|' + side;
 				if (pokemon.fainted || i < this.battle.pokemonControlled || choice.switchFlags[i] || trapped) {
 					party += '<button class="disabled has-tooltip" name="chooseDisabled" value="' + BattleLog.escapeHTML(pokemon.name) + (pokemon.fainted ? ',fainted' : trapped ? ',trapped' : i < sameSide.active.length ? ',active' : '') + '" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + (pokemon.hp ? '<span class="' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') : '') + '</button> ';
 				} else {
@@ -903,7 +902,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			var pos = choice.choices.length;
 
 			// Needed so it client does not freak out when only 1 mon left wants to switch out
@@ -938,7 +937,7 @@
 				var controls = '<div class="switchmenu" style="display:block">';
 				for (var i = 0; i < this.battle.pokemonControlled; i++) {
 					var pokemon = sideData.pokemon[i];
-					var tooltipArgs = 'switchpokemon|' + i;
+					var tooltipArgs = 'switchpokemon|' + i + '|' + side;
 					if (pokemon && !pokemon.fainted || choice.switchOutFlags[i]) {
 						controls += '<button disabled class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + (!pokemon.fainted ? '<span class="' + pokemon.getHPColorClass() + '"><span style="width:' + (Math.round(pokemon.hp * 92 / pokemon.maxhp) || 1) + 'px"></span></span>' + (pokemon.status ? '<span class="status ' + pokemon.status + '"></span>' : '') : '') + '</button> ';
 					} else if (!pokemon) {
@@ -966,7 +965,7 @@
 				var switchMenu = '';
 				for (var i = 0; i < switchables.length; i++) {
 					var pokemon = switchables[i];
-					var tooltipArgs = 'switchpokemon|' + i;
+					var tooltipArgs = 'switchpokemon|' + i + '|' + side;
 					if (isReviving) {
 						if (!pokemon.fainted || choice.switchFlags[i]) {
 							switchMenu += '<button class="disabled has-tooltip" name="chooseDisabled" value="' + BattleLog.escapeHTML(pokemon.name) + (pokemon.reviving ? ',active' : !pokemon.fainted ? ',notfainted' : '') + '" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '">';
@@ -1003,7 +1002,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			// var switchables = request && request.side ? sideData.pokemon : [];
 			var switchables = sideData.pokemon;
 			var maxIndex = Math.min(switchables.length, 24);
@@ -1019,7 +1018,7 @@
 			for (var i = 0; i < maxIndex; i++) {
 				var oIndex = choice.teamPreview[i] - 1;
 				var pokemon = switchables[oIndex];
-				var tooltipArgs = 'switchpokemon|' + oIndex;
+				var tooltipArgs = 'switchpokemon|' + oIndex + '|' + side;
 				if (i < choice.done) {
 					switchMenu += '<button disabled class="has-tooltip" data-tooltip="' + BattleLog.escapeHTML(tooltipArgs) + '"><span class="picon" style="' + Dex.getPokemonIcon(pokemon) + '"></span>' + BattleLog.escapeHTML(pokemon.name) + '</button> ';
 				} else {
@@ -1060,7 +1059,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			var buf = '<p>' + this.getTimerHTML();
 			if (!choice || !choice.waiting) {
 				return buf + '<em>Waiting for opponent...</em></p>';
@@ -1209,7 +1208,7 @@
 			this.finalDecision = this.finalDecisionMove = this.finalDecisionSwitch = false;
 			this.requests.set(request.slot, request);
 			if (request.side) {
-				this.allSideData.set(request.slot, request.side);
+				this.battle.allSideData.set(request.slot, request.side);
 				this.updateSideLocation(request.side, request.slot, request.isYourSlot);
 			}
 			this.notifyRequest();
@@ -1389,7 +1388,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			if (!choice) return;
 
 			var nearActive = sameSide.active;
@@ -1445,7 +1444,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			if (!choice) return;
 			this.tooltips.hideTooltip();
 
@@ -1474,7 +1473,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			var slotSwitchIn = 0; // one-based
 			for (var i in choice.switchFlags) {
 				if (choice.choices.indexOf('switch ' + (+i + 1)) === -1) {
@@ -1508,7 +1507,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			if (!choice) return;
 			pos = parseInt(pos, 10);
 			this.tooltips.hideTooltip();
@@ -1552,7 +1551,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			var choiceIndex = choice.choices.length - 1;
 			if (!this.nextChoice(side)) {
 				this.endTurn(side);
@@ -1567,7 +1566,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			var choices = choice.choices;
 			var nearActive = sameSide.active;
 
@@ -1603,7 +1602,7 @@
 			var choice = this.choices.get(side);
 			var sameSide = this.sameSide(side);
 			var oppSide = this.oppSide(side);
-			var sideData = this.allSideData.get(side);
+			var sideData = this.battle.allSideData.get(side);
 			var act = request && request.requestType;
 			if (act === 'team') {
 				if (choice.teamPreview.length >= 10) {
