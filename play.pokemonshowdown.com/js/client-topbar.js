@@ -33,9 +33,7 @@
 			var away = app.user.get('away');
 			var status = app.user.get('status');
 			var color = away ? 'color:#888;' : BattleLog.hashColor(app.user.get('userid'));
-			if (!app.user.loaded) {
-				buf = '<button disabled class="button">Loading...</button>';
-			} else if (app.user.get('named')) {
+		    if (app.user.get('named')) {
 				buf = '<span class="username" data-name="' + BattleLog.escapeHTML(name) + '"' + (away ? ' data-away="true"' : '') + (status ? 'data-status="' + BattleLog.escapeHTML(status) + '"' : '') + ' style="' + color + '"><i class="fa fa-user" style="color:' + (away ? '#888;' : '#779EC5') + '"></i> <span class="usernametext">' + BattleLog.escapeHTML(name) + '</span></span>';
 			} else {
 				buf = '<button name="login" class="button">Choose name</button>';
@@ -907,11 +905,6 @@
 			if (data.error) {
 				buf += '<p class="error">' + BattleLog.escapeHTML(data.error) + '</p>';
 				if (data.error.indexOf('inappropriate') >= 0) {
-					// log out so we don't autologin to a bad name if we refresh
-					$.post(app.user.getActionPHP(), {
-						act: 'logout',
-						userid: app.user.get('userid')
-					});
 
 					buf += '<p>Keep in mind these rules:</p>';
 					buf += '<ol>';
@@ -996,21 +989,7 @@
 			this.$el.html(buf);
 		},
 		submit: function (data) {
-			$.post(app.user.getActionPHP(), {
-				act: 'changepassword',
-				oldpassword: data.oldpassword,
-				password: data.password,
-				cpassword: data.cpassword
-			}, Storage.safeJSON(function (data) {
-				if (!data) data = {};
-				if (data.actionsuccess) {
-					app.addPopupMessage("Your password was successfully changed.");
-				} else {
-					app.addPopup(ChangePasswordPopup, {
-						error: data.actionerror
-					});
-				}
-			}), 'text');
+			return;
 		}
 	});
 
@@ -1036,29 +1015,7 @@
 		submit: function (data) {
 			var name = data.name;
 			var captcha = data.captcha;
-			$.post(app.user.getActionPHP(), {
-				act: 'register',
-				username: name,
-				password: data.password,
-				cpassword: data.cpassword,
-				captcha: captcha,
-				challstr: app.user.challstr
-			}, Storage.safeJSON(function (data) {
-				if (!data) data = {};
-				var token = data.assertion;
-				if (data.curuser && data.curuser.loggedin) {
-					app.user.set('registered', data.curuser);
-					var name = data.curuser.username;
-					app.send('/trn ' + name + ',1,' + token);
-					app.addPopupMessage("You have been successfully registered.");
-				} else {
-					app.addPopup(RegisterPopup, {
-						name: name,
-						captcha: captcha,
-						error: data.actionerror
-					});
-				}
-			}), 'text');
+			return;
 		}
 	});
 

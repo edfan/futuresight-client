@@ -217,13 +217,7 @@ function toId() {
 		 * domain in order to have access to the correct cookies.
 		 */
 		getActionPHP: function () {
-			var ret = '/~~' + Config.server.id + '/action.php';
-			if (Config.testclient) {
-				ret = 'https://' + Config.routes.client + ret;
-			}
-			return (this.getActionPHP = function () {
-				return ret;
-			})();
+			return;
 		},
 		/**
 		 * Process a signed assertion returned from the login server.
@@ -239,29 +233,9 @@ function toId() {
 		 *     triggered if the login server did not return a response
 		 */
 		finishRename: function (name, assertion) {
-			if (assertion.slice(0, 14).toLowerCase() === '<!doctype html') {
-				// some sort of MitM proxy; ignore it
-				var endIndex = assertion.indexOf('>');
-				if (endIndex > 0) assertion = assertion.slice(endIndex + 1);
-			}
-			if (assertion.charAt(0) === '\r') assertion = assertion.slice(1);
-			if (assertion.charAt(0) === '\n') assertion = assertion.slice(1);
-			if (assertion.indexOf('<') >= 0) {
-				app.addPopupMessage("Something is interfering with our connection to the login server. Most likely, your internet provider needs you to re-log-in, or your internet provider is blocking Pokémon Showdown.");
-				return;
-			}
-			if (assertion === ';') {
-				this.trigger('login:authrequired', name);
-			} else if (assertion === ';;@gmail') {
-				this.trigger('login:authrequired', name, '@gmail');
-			} else if (assertion.substr(0, 2) === ';;') {
-				this.trigger('login:invalidname', name, assertion.substr(2));
-			} else if (assertion.indexOf('\n') >= 0 || !assertion) {
-				app.addPopupMessage("Something is interfering with our connection to the login server.");
-			} else {
-				app.trigger('loggedin');
-				app.send('/trn ' + name + ',0,' + assertion);
-			}
+			app.trigger('loggedin');
+			app.send('/trn ' + name + ',0,' + assertion);
+			
 		},
 		/**
 		 * Rename this user to an arbitrary username. If the username is
@@ -288,91 +262,23 @@ function toId() {
 
 			if (this.get('userid') !== userid) {
 				var self = this;
-				$.post(this.getActionPHP(), {
-					act: 'getassertion',
-					userid: userid,
-					challstr: this.challstr
-				}, function (data) {
-					self.finishRename(name, data);
-				});
+				self.finishRename(name, '0');
 			} else {
 				app.send('/trn ' + name);
 			}
 		},
 		passwordRename: function (name, password, special) {
 			var self = this;
-			$.post(this.getActionPHP(), {
-				act: 'login',
-				name: name,
-				pass: password,
-				challstr: this.challstr
-			}, Storage.safeJSON(function (data) {
-				if (data && data.curuser && data.curuser.loggedin) {
-					// success!
-					self.set('registered', data.curuser);
-					self.finishRename(name, data.assertion);
-				} else {
-					// wrong password
-					if (special === '@gmail') {
-						try {
-							gapi.auth2.getAuthInstance().signOut(); // eslint-disable-line no-undef
-						} catch (e) {}
-					}
-					app.addPopup(LoginPasswordPopup, {
-						username: name,
-						error: data.error || 'Wrong password.',
-						special: special
-					});
-				}
-			}), 'text');
+			self.finishRename(name, '0');
 		},
 		challstr: '',
 		receiveChallstr: function (challstr) {
-			if (challstr) {
-				/**
-				 * Rename the user based on the `sid` and `showdown_username` cookies.
-				 * Specifically, if the user has a valid session, the user will be
-				 * renamed to the username associated with that session. If the user
-				 * does not have a valid session but does have a persistent username
-				 * (i.e. a `showdown_username` cookie), the user will be renamed to
-				 * that name; if that name is registered, the user will be required
-				 * to authenticate.
-				 *
-				 * See `finishRename` above for a list of events this can emit.
-				 */
-				this.challstr = challstr;
-				var self = this;
-				$.post(this.getActionPHP(), {
-					act: 'upkeep',
-					challstr: this.challstr
-				}, Storage.safeJSON(function (data) {
-					self.loaded = true;
-					if (!data.username) {
-						app.topbar.updateUserbar();
-						return;
-					}
-
-					// | , ; are not valid characters in names
-					data.username = data.username.replace(/[\|,;]+/g, '');
-
-					if (data.loggedin) {
-						self.set('registered', {
-							username: data.username,
-							userid: toUserid(data.username)
-						});
-					}
-					self.finishRename(data.username, data.assertion);
-				}), 'text');
-			}
+			return;
 		},
 		/**
 		 * Log out from the server (but remain connected as a guest).
 		 */
 		logout: function () {
-			$.post(this.getActionPHP(), {
-				act: 'logout',
-				userid: this.get('userid')
-			});
 			app.send('/logout');
 			app.trigger('init:socketclosed', "You have been logged out and disconnected.<br /><br />If you wanted to change your name while staying connected, use the 'Change Name' button or the '/nick' command.", false);
 			app.socket.close();
@@ -938,29 +844,8 @@ function toId() {
 		loadingTeamQueue: [],
 		loadTeam: function (team, callback) {
 			if (!team.teamid) return;
-			if (!this.loadingTeam) {
-				var app = this;
-				this.loadingTeam = true;
-				$.get(app.user.getActionPHP(), {
-					act: 'getteam',
-					teamid: team.teamid
-				}, Storage.safeJSON(function (data) {
-					app.loadingTeam = false;
-					if (data.actionerror) {
-						return app.addPopupMessage("Error loading team: " + data.actionerror);
-					}
-					team.privacy = data.privacy;
-					team.team = data.team;
-					team.loaded = true;
-					callback(team);
-					var entry = app.loadingTeamQueue.shift();
-					if (entry) {
-						app.loadTeam(entry[0], entry[1]);
-					}
-				}));
-			} else {
-				this.loadingTeamQueue.push([team, callback]);
-			}
+			this.loadingTeamQueue.push([team, callback]);
+			
 		},
 		/**
 		 * Send team to sim server
@@ -1132,12 +1017,6 @@ function toId() {
 				var named = !!+parts[2];
 
 				var userid = toUserid(parsed.name);
-				if (userid === this.user.get('userid') && parsed.name !== this.user.get('name')) {
-					$.post(app.user.getActionPHP(), {
-						act: 'changeusername',
-						username: parsed.name
-					}, function () {}, 'text');
-				}
 
 				var settings = _.clone(app.user.get('settings'));
 				if (parts.length > 4) {
@@ -1464,27 +1343,6 @@ function toId() {
 			var serverid = Config.server.id && toID(Config.server.id.split(':')[0]);
 			var silent = data.silent;
 			if (serverid && serverid !== 'showdown') id = serverid + '-' + id;
-			$.post(app.user.getActionPHP(), {
-				act: 'uploadreplay',
-				log: data.log,
-				serverid: serverid,
-				password: data.password || '',
-				id: id
-			}, function (data) {
-				if (silent) return;
-				var sData = data.split(':');
-				if (sData[0] === 'success') {
-					app.addPopup(ReplayUploadedPopup, { id: sData[1] || id });
-				} else if (data === 'hash mismatch') {
-					app.addPopupMessage("Someone else is already uploading a replay of this battle. Try again in five seconds.");
-				} else if (data === 'not found') {
-					app.addPopupMessage("This server isn't registered, and doesn't support uploading replays.");
-				} else if (data === 'invalid id') {
-					app.addPopupMessage("This server is using invalid battle IDs, so this replay can't be uploaded.");
-				} else {
-					app.addPopupMessage("Error while uploading replay: " + data);
-				}
-			});
 		},
 		roomsResponse: function (data) {
 			if (data) {
