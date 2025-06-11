@@ -412,7 +412,7 @@
 
 				act = request.requestType;
 				if (request.side) {
-					switchables = sameSide.pokemon;
+					switchables = request.side.pokemon;
 				}
 
 				// CR efan: make finalDecision per side
@@ -448,13 +448,13 @@
 
 			case 'switch':
 				if (!choice) {
-					this.choices.set(side, {
+					choice = {
 						choices: [],
 						switchFlags: {},
 						switchOutFlags: {},
 						freedomDegrees: 0,
 						canSwitch: 0
-					});
+					};
 
 					if (request.forceSwitch !== true) {
 						var faintedLength = _.filter(request.forceSwitch, function (fainted) { return fainted; }).length;
@@ -462,6 +462,8 @@
 						choice.freedomDegrees = Math.max(freedomDegrees, 0);
 						choice.canSwitch = faintedLength - choice.freedomDegrees;
 					}
+
+					this.choices.set(side, choice);
 				}
 				this.updateSwitchControls(type, side);
 				break;
