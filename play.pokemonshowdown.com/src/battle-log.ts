@@ -104,14 +104,13 @@ export class BattleLog {
 		this.addNode(el);
 	}
 	jumpToTurn(turn: number) {
-		console.log(turn);
-		if (turn < 1) {
-			turn = 0;
+		if (turn == 0) {
+			$(`.battle-history`).nextAll().remove();
 		} else {
 			turn -= 1;
+			let turnId = `Turn ${turn}`;
+			$(`[id='${turnId}']`).nextAll().remove();
 		}
-		let turnId = `Turn ${turn}`;
-		$(`[id='${turnId}']`).nextAll().remove();
 	}
 	add(args: Args, kwArgs?: KWArgs, preempt?: boolean) {
 		if (kwArgs?.silent) return;
@@ -331,6 +330,7 @@ export class BattleLog {
 
 		case 'tier':
 			this.addDiv('', '<small>Format:</small> <br /><strong>' + BattleLog.escapeHTML(args[1]) + '</strong>');
+			this.addDiv('', '<button name="jumpToTurn" value="0">Jump to Team Preview</button>');
 			break;
 
 		case 'turn':
