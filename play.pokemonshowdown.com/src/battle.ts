@@ -1395,7 +1395,9 @@ export class Battle {
 		this.turn = turnNum;
 		this.started = true;
 
-		this.stepQueueByTurn.set(turnNum, [...this.stepQueue]);
+		// Save queue truncated to the current position so replaying from this
+		// snapshot doesn't re-execute entries beyond the turn boundary.
+		this.stepQueueByTurn.set(turnNum, this.stepQueue.slice(0, this.currentStep + 1));
 
 		if (this.seeking === null) this.turnsSinceMoved++;
 
@@ -3842,6 +3844,7 @@ export class Battle {
 			if (this.turn === -1) {
 				this.turn = 0;
 				this.scene.updateBgm();
+				this.stepQueueByTurn.set(0, this.stepQueue.slice(0, this.currentStep + 1));
 			}
 		}
 	}

@@ -105,9 +105,11 @@ export class BattleLog {
 	}
 	jumpToTurn(turn: number) {
 		if (turn == 0) {
-			$(`.battle-history`).nextAll().remove();
+			this.innerElem.innerHTML = '';
 		} else {
-			turn -= 1;
+			// Turn headers have id "Turn N". Remove everything after the
+			// target turn header so the log shows state at the start of
+			// that turn.
 			let turnId = `Turn ${turn}`;
 			$(`[id='${turnId}']`).nextAll().remove();
 		}
