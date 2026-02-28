@@ -41,14 +41,11 @@
 				buf += '<p>(We\'ll be back up in a few hours.)</p>';
 				buf += '</div>';
 			} else {
-				buf += '<div class="menugroup"><form class="battleform" data-search="1">';
+				buf += '<div class="menugroup"><form class="battleform">';
 				buf += '<p><label class="label">Format:</label>' + this.renderFormats() + '</p>';
-				buf += '<p><label class="label">Team:</label>' + this.renderTeams() + '</p>';
-				buf += '<p><label class="label" name="partner" style="display:none">';
-				buf += 'Partner:<br />';
-				buf += '<input class="partnerselect" /><button name="partnersubmit">Invite</button></label></p>';
-				buf += '<p><label class="checkbox"><input type="checkbox" name="private" ' + (Storage.prefs('disallowspectators') ? 'checked' : '') + ' /> <abbr title="You can still invite spectators by giving them the URL or using the /invite command">Don\'t allow spectators</abbr></label></p>';
-				buf += '<p><button class="button mainmenu1 big" name="search"><strong>Battle!</strong><br /><small>Find a random opponent</small></button></p></form></div>';
+				buf += '<p><label class="label">Your Team:</label>' + this.renderTeams(null, undefined, 'p1') + '</p>';
+				buf += '<p><label class="label">Opp. Team:</label>' + this.renderTeams(null, undefined, 'p2') + '</p>';
+				buf += '<p><button class="button mainmenu1 big" name="startBattle"><strong>Start Battle</strong></button></p></form></div>';
 			}
 
 			buf += '<div class="menugroup">';
@@ -697,18 +694,22 @@
 			}
 			var $searchForm = $('.mainmenu button.big').closest('form');
 			var $formatButton = $searchForm.find('button[name=format]');
-			var $teamButton = $searchForm.find('button[name=team]');
+			var $teamButtons = $searchForm.find('button[name=team]');
 			if (!this.searching || $.isArray(this.searching) && !this.searching.length) {
 				var format = $formatButton.val();
-				var teamIndex = $teamButton.val();
 				$formatButton.replaceWith(this.renderFormats(format));
-				$teamButton.replaceWith(this.renderTeams(format, teamIndex));
+				var self = this;
+				$teamButtons.each(function (i, el) {
+					var side = $(el).data('side');
+					var teamIndex = $(el).val();
+					$(el).replaceWith(self.renderTeams(format, teamIndex, side));
+				});
 
-				$searchForm.find('button.big').html('<strong>Battle!</strong><br /><small>Find a random opponent</small>').removeClass('disabled');
+				$searchForm.find('button.big').html('<strong>Start Battle</strong>').removeClass('disabled');
 				$searchForm.find('p.cancel').remove();
 			} else {
 				$formatButton.addClass('preselected')[0].disabled = true;
-				$teamButton.addClass('preselected')[0].disabled = true;
+				$teamButtons.addClass('preselected').each(function (i, el) { el.disabled = true; });
 				$searchForm.find('button.big').html('<strong><i class="fa fa-refresh fa-spin"></i> Searching...</strong>').addClass('disabled');
 				var searchEntries = $.isArray(this.searching) ? this.searching : [this.searching];
 				for (var i = 0; i < searchEntries.length; i++) {
@@ -850,13 +851,16 @@
 			}
 			this.$('button.onlineonly').removeClass('disabled');
 
-			if (!this.searching) this.$('.mainmenu button.big').html('<strong>Battle!</strong><br /><small>Find a random opponent</small>').removeClass('disabled');
+			if (!this.searching) this.$('.mainmenu button.big').html('<strong>Start Battle</strong>').removeClass('disabled');
 			var self = this;
 			this.$('button[name=format]').each(function (i, el) {
 				var val = el.value;
-				var $teamButton = $(el).closest('form').find('button[name=team]');
+				var $teamButtons = $(el).closest('form').find('button[name=team]');
 				$(el).replaceWith(self.renderFormats(val));
-				$teamButton.replaceWith(self.renderTeams(val));
+				$teamButtons.each(function (j, teamEl) {
+					var side = $(teamEl).data('side');
+					$(teamEl).replaceWith(self.renderTeams(val, undefined, side));
+				});
 			});
 		},
 		reconnect: function () {
@@ -869,7 +873,8 @@
 			this.$('button[name=team]').each(function (i, el) {
 				if (el.value === 'random') return;
 				var format = $(el).closest('form').find('button[name=format]').val();
-				$(el).replaceWith(self.renderTeams(format));
+				var side = $(el).data('side');
+				$(el).replaceWith(self.renderTeams(format, undefined, side));
 			});
 		},
 		updateRightMenu: function () {
@@ -1028,8 +1033,8 @@
 			if (!noChoice) {
 				this.curFormat = formatid;
 				if (!this.curFormat) {
-					if (BattleFormats['gen9vgc2025regi']) {
-						this.curFormat = 'gen9vgc2025regi';
+					if (BattleFormats['gen9vgc2026regf']) {
+						this.curFormat = 'gen9vgc2026regf';
 					} else for (var i in BattleFormats) {
 						if (!BattleFormats[i].searchShow || !BattleFormats[i].challengeShow) continue;
 						this.curFormat = i;
@@ -1042,21 +1047,22 @@
 		},
 		curTeamFormat: '',
 		curTeamIndex: 0,
-		renderTeams: function (formatid, teamIndex) {
+		renderTeams: function (formatid, teamIndex, side) {
+			var sideAttr = side ? ' data-side="' + side + '"' : '';
 			if (Storage.whenTeamsLoaded.error) {
-				return '<button class="select teamselect" name="joinRoom" value="teambuilder"><em class="message-error">Error loading teams</em></button>';
+				return '<button class="select teamselect" name="joinRoom" value="teambuilder"' + sideAttr + '><em class="message-error">Error loading teams</em></button>';
 			}
 			if (!Storage.teams || !window.BattleFormats) {
-				return '<button class="select teamselect" name="team" disabled><em>Loading...</em></button>';
+				return '<button class="select teamselect" name="team" disabled' + sideAttr + '><em>Loading...</em></button>';
 			}
 			if (!formatid) formatid = this.curFormat;
 			var atIndex = formatid.indexOf('@@@');
 			if (atIndex >= 0) formatid = formatid.slice(0, atIndex);
 			if (!window.BattleFormats[formatid]) {
-				return '<button class="select teamselect" name="team" disabled></button>';
+				return '<button class="select teamselect" name="team" disabled' + sideAttr + '></button>';
 			}
 			if (window.BattleFormats[formatid].team) {
-				return '<button class="select teamselect preselected" name="team" value="random" disabled>' + TeamPopup.renderTeam('random') + '</button>';
+				return '<button class="select teamselect preselected" name="team" value="random" disabled' + sideAttr + '>' + TeamPopup.renderTeam('random') + '</button>';
 			}
 
 			var format = window.BattleFormats[formatid];
@@ -1064,7 +1070,7 @@
 
 			var teams = Storage.teams;
 			if (!teams.length) {
-				return '<button class="select teamselect" name="team" disabled>You have no teams</button>';
+				return '<button class="select teamselect" name="team" disabled' + sideAttr + '>You have no teams</button>';
 			}
 			if (teamIndex === undefined) teamIndex = -1;
 			if (teamIndex < 0) {
@@ -1082,10 +1088,30 @@
 			} else {
 				teamIndex = +teamIndex;
 			}
-			return '<button class="select teamselect" name="team" value="' + (teamIndex < 0 ? '' : teamIndex) + '">' + TeamPopup.renderTeam(teamIndex) + '</button>';
+			return '<button class="select teamselect" name="team" value="' + (teamIndex < 0 ? '' : teamIndex) + '"' + sideAttr + '>' + TeamPopup.renderTeam(teamIndex) + '</button>';
 		},
 
 		// buttons
+		startBattle: function (i, button) {
+			if (!window.BattleFormats) return;
+			if (!app.user.get('named')) {
+				app.addPopup(LoginPopup);
+				return;
+			}
+			var $form = $(button).closest('form');
+			var format = $form.find('button[name=format]').val();
+			var team1Idx = $form.find('button[name=team][data-side=p1]').val();
+			var team2Idx = $form.find('button[name=team][data-side=p2]').val();
+			var team1 = Storage.teams[team1Idx];
+			var team2 = Storage.teams[team2Idx];
+			if (!team1 || !team2) {
+				app.addPopup(Popup, {htmlMessage: "Please select teams for both sides."});
+				return;
+			}
+			var packed1 = Storage.getPackedTeam(team1);
+			var packed2 = Storage.getPackedTeam(team2);
+			app.send('/startbattle ' + format + ';;;' + packed1 + ';;;' + packed2);
+		},
 		search: function (i, button) {
 			if (!window.BattleFormats) return;
 			this.requestNotifications();
@@ -1397,8 +1423,11 @@
 			} else if (app.rooms[''].curFormat !== format) {
 				app.rooms[''].curFormat = format;
 				app.rooms[''].curTeamIndex = -1;
-				var $teamButton = this.sourceEl.closest('form').find('button[name=team]');
-				if ($teamButton.length) $teamButton.replaceWith(app.rooms[''].renderTeams(format));
+				var $teamButtons = this.sourceEl.closest('form').find('button[name=team]');
+				if ($teamButtons.length) $teamButtons.each(function () {
+					var side = $(this).data('side');
+					$(this).replaceWith(app.rooms[''].renderTeams(format, undefined, side));
+				});
 
 				var $bestOfCheckbox = this.sourceEl.closest('form').find('input[name=bestof]');
 				var $bestOfValueInput = this.sourceEl.closest('form').find('input[name=bestofvalue]');

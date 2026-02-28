@@ -6,6 +6,67 @@ function toId() {
 
 (function ($) {
 
+	var ADJECTIVES = [
+		'Amber', 'Ancient', 'Aqua', 'Arctic', 'Autumn', 'Azure', 'Bitter', 'Blazing', 'Blissful',
+		'Bold', 'Brave', 'Breeze', 'Bright', 'Brilliant', 'Brisk', 'Bronze', 'Calm', 'Cedar',
+		'Cerulean', 'Charming', 'Cheerful', 'Cherry', 'Chilly', 'Cinder', 'Clear', 'Clever',
+		'Cloud', 'Cobalt', 'Cool', 'Copper', 'Coral', 'Cosmic', 'Cozy', 'Crimson', 'Crystal',
+		'Curious', 'Cyan', 'Dainty', 'Dapper', 'Daring', 'Dawn', 'Dewy', 'Diamond', 'Distant',
+		'Dreamy', 'Drifting', 'Dusky', 'Dusty', 'Eager', 'Earthy', 'Echoing', 'Elder', 'Ember',
+		'Emerald', 'Endless', 'Eternal', 'Evening', 'Fair', 'Falling', 'Fancy', 'Fern', 'Fierce',
+		'Fiery', 'Flint', 'Flora', 'Fluffy', 'Foggy', 'Forest', 'Frosty', 'Frozen', 'Gentle',
+		'Gilded', 'Glacial', 'Gleaming', 'Gliding', 'Glowing', 'Golden', 'Graceful', 'Grand',
+		'Granite', 'Grassy', 'Gusty', 'Hale', 'Hazy', 'Hearty', 'Hidden', 'Hollow', 'Honey',
+		'Humble', 'Hushed', 'Icy', 'Idle', 'Indigo', 'Inner', 'Iron', 'Ivory', 'Jade', 'Jasper',
+		'Jeweled', 'Jolly', 'Jovial', 'Keen', 'Kind', 'Lapis', 'Lasting', 'Lavender', 'Leafy',
+		'Light', 'Lilac', 'Lively', 'Lone', 'Lucid', 'Lucky', 'Luminous', 'Lunar', 'Lush',
+		'Maple', 'Marble', 'Marine', 'Marshy', 'Mellow', 'Merry', 'Midnight', 'Mild', 'Mint',
+		'Misty', 'Molten', 'Moonlit', 'Morning', 'Mossy', 'Muted', 'Mystic', 'Nimble', 'Noble',
+		'Oaken', 'Opal', 'Orchid', 'Pacific', 'Pale', 'Pastel', 'Patient', 'Peach', 'Pearl',
+		'Pebble', 'Pine', 'Placid', 'Plucky', 'Plush', 'Polar', 'Polished', 'Prairie', 'Proud',
+		'Pure', 'Quiet', 'Radiant', 'Rainy', 'Rapid', 'Regal', 'Rising', 'River', 'Roaming',
+		'Rocky', 'Rolling', 'Rosy', 'Royal', 'Ruby', 'Rustic', 'Sable', 'Sacred', 'Sage',
+		'Sandy', 'Sapphire', 'Scarlet', 'Serene', 'Shadow', 'Shady', 'Shining', 'Silent',
+		'Silken', 'Silver', 'Simple', 'Sky', 'Slate', 'Sleek', 'Snowy', 'Soft', 'Solar',
+		'Solemn', 'Sparkling', 'Spiced', 'Spring', 'Starry', 'Steady', 'Steel', 'Still',
+		'Stone', 'Storm', 'Sturdy', 'Summer', 'Sunlit', 'Sunny', 'Sunset', 'Swift', 'Tawny',
+		'Tender', 'Thistle', 'Thunder', 'Tidal', 'Timber', 'Topaz', 'Tranquil', 'Tropical',
+		'Twilight', 'Upper', 'Velvet', 'Verdant', 'Violet', 'Vivid', 'Warm', 'Waving', 'Western',
+		'Whispering', 'Wild', 'Willow', 'Windy', 'Winter', 'Wistful', 'Woven', 'Zephyr'
+	];
+
+	var NOUNS = [
+		'Acorn', 'Agate', 'Anchor', 'Antler', 'Arbor', 'Arrow', 'Aspen', 'Aurora', 'Badge',
+		'Basin', 'Beacon', 'Birch', 'Bison', 'Bloom', 'Bluff', 'Bonfire', 'Boulder', 'Branch',
+		'Bridge', 'Brook', 'Burrow', 'Cairn', 'Canopy', 'Canyon', 'Cape', 'Castle', 'Cavern',
+		'Chalk', 'Chime', 'Cinder', 'Cliff', 'Cloud', 'Clover', 'Coast', 'Cobble', 'Compass',
+		'Coral', 'Cottage', 'Crane', 'Creek', 'Crest', 'Cricket', 'Crown', 'Current', 'Dale',
+		'Dawn', 'Delta', 'Dew', 'Dove', 'Drift', 'Drum', 'Dune', 'Dusk', 'Eagle', 'Echo',
+		'Eddy', 'Elk', 'Elm', 'Ember', 'Falls', 'Fawn', 'Feather', 'Fern', 'Field', 'Finch',
+		'Fjord', 'Flame', 'Flint', 'Flora', 'Flower', 'Forge', 'Fort', 'Fossil', 'Fountain',
+		'Fox', 'Frost', 'Gale', 'Garden', 'Garnet', 'Gate', 'Gem', 'Glacier', 'Glade', 'Glen',
+		'Gorge', 'Granite', 'Grove', 'Gull', 'Harbor', 'Hare', 'Haven', 'Hawk', 'Hazel',
+		'Heath', 'Hedge', 'Helm', 'Heron', 'Hill', 'Hollow', 'Horizon', 'Ibis', 'Inlet', 'Isle',
+		'Ivy', 'Jade', 'Jay', 'Jewel', 'Juniper', 'Keep', 'Kestrel', 'Kettle', 'Knoll', 'Lagoon',
+		'Lake', 'Lantern', 'Larch', 'Lark', 'Laurel', 'Leaf', 'Ledge', 'Light', 'Lily', 'Lodge',
+		'Lotus', 'Lynx', 'Maple', 'Marsh', 'Meadow', 'Mesa', 'Minnow', 'Mist', 'Monarch',
+		'Moon', 'Moor', 'Moss', 'Mountain', 'Muse', 'Nest', 'Nettle', 'Nightfall', 'Nutmeg',
+		'Oak', 'Oasis', 'Orchard', 'Oriole', 'Osprey', 'Otter', 'Owl', 'Palm', 'Pass', 'Path',
+		'Peak', 'Petal', 'Pier', 'Pine', 'Plover', 'Pond', 'Prairie', 'Quail', 'Quarry', 'Quartz',
+		'Rain', 'Rapids', 'Raven', 'Ravine', 'Reed', 'Reef', 'Ridge', 'Rill', 'Ripple', 'Robin',
+		'Root', 'Rose', 'Rowan', 'Sage', 'Sand', 'Seed', 'Shell', 'Shore', 'Shrine', 'Sky',
+		'Slate', 'Snow', 'Solstice', 'Sparrow', 'Spire', 'Spring', 'Sprout', 'Spruce', 'Star',
+		'Stone', 'Storm', 'Stream', 'Summit', 'Swallow', 'Swan', 'Thistle', 'Thorn', 'Thyme',
+		'Tide', 'Timber', 'Tower', 'Trail', 'Tulip', 'Tundra', 'Vale', 'Valley', 'Vapor', 'Vine',
+		'Vista', 'Wander', 'Wave', 'Willow', 'Wind', 'Wing', 'Wren', 'Yarrow', 'Yew', 'Zenith'
+	];
+
+	function generateAutoName() {
+		var adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+		var noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+		return (adj + ' ' + noun).toLowerCase();
+	}
+
 	Config.sockjsprefix = '/showdown';
 	Config.root = '/';
 
@@ -334,6 +395,13 @@ function toId() {
 				Storage.whenPrefsLoaded(function () {
 					if (!Config.server.registered) {
 						app.send('/autojoin');
+						// Check for ?position= query parameter to resume a saved battle
+						var positionId = new URLSearchParams(self.query || '').get('position');
+						if (positionId) {
+							app.once('init:choosename', function () {
+								app.send('/resume ' + positionId);
+							});
+						}
 						Backbone.history.start({ pushState: !Config.testclient });
 						return;
 					}
@@ -1041,6 +1109,11 @@ function toId() {
 				this.user.setPersistentName(named ? parsed.name : null);
 				if (named) {
 					this.trigger('init:choosename');
+				} else if (!this._autoNamed) {
+					// Auto-assign a username (single-player training tool)
+					this._autoNamed = true;
+					var autoName = generateAutoName();
+					this.user.rename(autoName);
 				}
 				if (app.ignore[userid]) {
 					delete app.ignore[userid];

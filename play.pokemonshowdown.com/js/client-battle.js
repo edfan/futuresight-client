@@ -146,6 +146,16 @@
 			if (data.substr(0, 6) === '|init|') {
 				return this.init(data);
 			}
+			if (data.substr(0, 9) === '|initlog|') {
+				// Resume from position: replace step queue with saved log and
+				// seek to the end. This wipes the initial >start/>player output
+				// and replays the saved game log, populating the battle log,
+				// scene sprites, and stepQueueByTurn.
+				var logLines = JSON.parse(data.slice(9));
+				this.battle.stepQueue = logLines;
+				this.battle.seekTurn(Infinity, true);
+				return;
+			}
 			if (data.substr(0, 11) === '|cantleave|') {
 				this.requireForfeit = true;
 				return;
@@ -230,6 +240,11 @@
 					this.battle.stepQueue.push(logLine);
 				} else if (logLine.substr(0, 6) === '|chat|' || logLine.substr(0, 3) === '|c|' || logLine.substr(0, 4) === '|c:|' || logLine.substr(0, 9) === '|chatmsg|' || logLine.substr(0, 10) === '|inactive|') {
 					this.battle.instantAdd(logLine);
+				} else if (logLine.substr(0, 9) === '|initlog|') {
+					var initLogLines = JSON.parse(logLine.slice(9));
+					this.battle.stepQueue = initLogLines;
+					this.battle.seekTurn(Infinity, true);
+					return;
 				} else if (logLine.substr(0, 12) === '|jumptoturn|') {
 					this.battle.stepQueue.push(logLine);
 				} else if (logLine.substr(0, 6) === '|turn|') {
@@ -358,6 +373,14 @@
 				if (!controlsWereShown || choice === undefined || choice && choice.waiting) {
 					// don't update controls (and, therefore, side) if `this.choice === null`: causes damage miscalculations
 					this.updateControlsForPlayer(side);
+					// Add Share Position button below p2's controls
+					if (side === 'p2' && !this.battleEnded) {
+						this.controlsForSide('p2').append(
+							'<p style="text-align:center;margin-top:4px">' +
+							'<button class="button" name="sharePosition" style="font-size:0.9em">' +
+							'<i class="fa fa-share-alt"></i> Share Position</button></p>'
+						);
+					}
 				} else {
 					this.updateTimer();
 				}
@@ -1651,6 +1674,9 @@
 		},
 		jumpToTurn: function (turn) {
 			this.send('/jumpToTurn ' + turn);
+		},
+		sharePosition: function () {
+			this.send('/shareposition');
 		},
 		leaveBattle: function () {
 			this.tooltips.hideTooltip();
