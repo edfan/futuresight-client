@@ -396,7 +396,7 @@ function toId() {
 					if (!Config.server.registered) {
 						app.send('/autojoin');
 						// Check for ?position= query parameter to resume a saved battle
-						var positionId = new URLSearchParams(self.query || '').get('position');
+						var positionId = new URLSearchParams(app.query || '').get('position');
 						if (positionId) {
 							app.once('init:choosename', function () {
 								app.send('/resume ' + positionId);
@@ -432,6 +432,13 @@ function toId() {
 					app.send('/autojoin ' + autojoinIds.join(','));
 					var settings = Dex.prefs('serversettings') || {};
 					if (Object.keys(settings).length) app.user.set('settings', settings);
+					// Check for ?position= query parameter to resume a saved battle
+					var positionId = new URLSearchParams(app.query || '').get('position');
+					if (positionId) {
+						app.once('init:choosename', function () {
+							app.send('/resume ' + positionId);
+						});
+					}
 					// HTML5 history throws exceptions when running on file://
 					var useHistory = !Config.testclient && (location.pathname.slice(-5) !== '.html');
 					Backbone.history.start({ pushState: useHistory });
@@ -1114,6 +1121,9 @@ function toId() {
 					this._autoNamed = true;
 					var autoName = generateAutoName();
 					this.user.rename(autoName);
+				} else if (this._autoNamed) {
+					// Auto-named user has been assigned their name
+					this.trigger('init:choosename');
 				}
 				if (app.ignore[userid]) {
 					delete app.ignore[userid];
