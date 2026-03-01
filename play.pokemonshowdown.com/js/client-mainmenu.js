@@ -50,15 +50,17 @@
 
 			buf += '<div class="menugroup">';
 			buf += '<p><button class="button mainmenu2" name="joinRoom" value="teambuilder">Teambuilder</button></p>';
-			buf += '<p><button class="button mainmenu3" name="joinRoom" value="ladder">Ladder</button></p>';
-			buf += '<p><button class="button mainmenu4" name="send" value="/smogtours">Tournaments</button></p>';
 			buf += '</div>';
 
-			buf += '<div class="menugroup"><p><button class="button mainmenu4 onlineonly disabled" name="joinRoom" value="battles">Watch a battle</button></p>';
-			buf += '<p><button class="button mainmenu5 onlineonly disabled" name="finduser">Find a user</button></p>';
-			buf += '<p><button class="button mainmenu6 onlineonly disabled" name="send" value="/friends">Friends</button></p></div>';
-
 			this.$('.mainmenu').html(buf);
+
+			// activity menu: Replace news with Resume from Replay
+			var replayBuf = '<div class="menugroup" style="width:270px">';
+			replayBuf += '<h3 style="margin:0 0 5px">Resume from Replay</h3>';
+			replayBuf += '<p><input class="textbox replay-url-inline" type="text" placeholder="https://replay.pokemonshowdown.com/..." style="width:90%;box-sizing:border-box" /></p>';
+			replayBuf += '<p><button class="button mainmenu4" name="loadReplayInline"><strong>Load Replay</strong></button></p>';
+			replayBuf += '</div>';
+			this.$('.activitymenu').html(replayBuf);
 
 			// right menu
 			if (document.location.hostname === Config.routes.client) {
@@ -77,31 +79,6 @@
 			this.updateFormats();
 
 			app.user.on('saveteams', this.updateTeams, this);
-
-			// news
-			// (created during page load)
-
-			var self = this;
-			Storage.whenPrefsLoaded(function () {
-				var newsid = Number(Storage.prefs('newsid'));
-				var $news = this.$('.news-embed');
-				if (!newsid) {
-					if ($(window).width() < 628) {
-						// News starts minimized in phone layout
-						self.minimizePM($news);
-					}
-					return;
-				}
-				var $newsEntries = $news.find('.newsentry');
-				var hasUnread = false;
-				for (var i = 0; i < $newsEntries.length; i++) {
-					if (Number($newsEntries.eq(i).data('newsid')) > newsid) {
-						hasUnread = true;
-						$newsEntries.eq(i).addClass('unread');
-					}
-				}
-				if (!hasUnread) self.minimizePM($news);
-			});
 
 			if (!app.roomsFirstOpen && window.location.host !== 'demo.psim.us' && window.innerWidth < 630) {
 				if (Config.roomsFirstOpenScript) {
@@ -1111,6 +1088,17 @@
 			var packed1 = Storage.getPackedTeam(team1);
 			var packed2 = Storage.getPackedTeam(team2);
 			app.send('/startbattle ' + format + ';;;' + packed1 + ';;;' + packed2);
+		},
+		resumeFromReplay: function () {
+			app.addPopup(ReplayImportPopup, {sourceEl: null});
+		},
+		loadReplayInline: function () {
+			var url = this.$('.replay-url-inline').val();
+			if (!url) {
+				app.addPopup(ReplayImportPopup, {sourceEl: null});
+				return;
+			}
+			app.addPopup(ReplayImportPopup, {replayUrl: url, sourceEl: null});
 		},
 		search: function (i, button) {
 			if (!window.BattleFormats) return;

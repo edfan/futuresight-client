@@ -389,8 +389,6 @@ function toId() {
 			} else {
 				if (document.location.hostname === Config.routes.client || Config.testclient) {
 					this.addRoom('rooms', null, true);
-				} else {
-					this.addRoom('lobby', null, true);
 				}
 				Storage.whenPrefsLoaded(function () {
 					if (!Config.server.registered) {
@@ -400,6 +398,13 @@ function toId() {
 						if (positionId) {
 							app.once('init:choosename', function () {
 								app.send('/resume ' + positionId);
+							});
+						}
+						// Check for ?replay= query parameter to import from replay
+						var replayUrl = new URLSearchParams(app.query || '').get('replay');
+						if (replayUrl) {
+							app.once('init:choosename', function () {
+								app.addPopup(ReplayImportPopup, {replayUrl: replayUrl, sourceEl: null});
 							});
 						}
 						Backbone.history.start({ pushState: !Config.testclient });
@@ -437,6 +442,13 @@ function toId() {
 					if (positionId) {
 						app.once('init:choosename', function () {
 							app.send('/resume ' + positionId);
+						});
+					}
+					// Check for ?replay= query parameter to import from replay
+					var replayUrl = new URLSearchParams(app.query || '').get('replay');
+					if (replayUrl) {
+						app.once('init:choosename', function () {
+							app.addPopup(ReplayImportPopup, {replayUrl: replayUrl, sourceEl: null});
 						});
 					}
 					// HTML5 history throws exceptions when running on file://

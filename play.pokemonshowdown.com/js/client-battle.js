@@ -244,9 +244,13 @@
 					var initLogLines = JSON.parse(logLine.slice(9));
 					this.battle.stepQueue = initLogLines;
 					this.battle.seekTurn(Infinity, true);
+					this.battleEnded = false;
 					return;
 				} else if (logLine.substr(0, 12) === '|jumptoturn|') {
+					this.battleEnded = false;
 					this.battle.stepQueue.push(logLine);
+					this.battle.add();
+					this.battle.seekTurn(Infinity, true);
 				} else if (logLine.substr(0, 6) === '|turn|') {
 					this.battle.stepQueue.push(logLine);
 				} else {
@@ -1237,7 +1241,7 @@
 				this.updateSideLocation(request.side, request.slot, request.isYourSlot);
 			}
 			this.notifyRequest();
-			this.controlsShown = new Map();
+			this.controlsShown.delete(request.slot);
 			this.updateControls(request.slot);
 		},
 		notifyRequest: function () {
